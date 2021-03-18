@@ -70,6 +70,7 @@ buttonWidth, buttonHeight = 30, 30
 savePath = "saveData.json"
 
 gameState = "start menu"
+gameStates = [gameState]
 
 powerUpSpawnChance = 40 # as percentage
 numOfEnemies = 10
@@ -90,8 +91,8 @@ playerData = {
 	"hurtAmount": 10,
 	"numberOfshots": 1,
 	"bullets": {
-		"numOfbullets": int(numOfEnemies * 1.5),
-		"maxAmount": int(numOfEnemies * 1.5),
+		"numOfbullets": numOfEnemies,
+		"maxAmount": numOfEnemies,
 		"refillRate": 5,
 	}
 }
@@ -602,10 +603,16 @@ class Player:
 		if self.refilling:
 			endTime = self.endFillTime.seconds
 
+			if endTime >= 65:
+				endTime -= 60
+
 			if self.currentTime == 0:
 				difference = self.bulletRefillRate
 			else:
 				difference = endTime - self.currentTime
+
+			print(endTime, difference)
+
 			bulletTimerLabel.UpdateText(str(difference))
 			if difference <= 0:
 				self.Refill()
@@ -712,7 +719,7 @@ class Enemy:
 
 		if positive:
 			player.score += player.scoreAmount
-			powerUpChance = random.randint(0, max(0, 100-powerUpSpawnChance))
+			powerUpChance = random.randint(0, max(0, powerUpSpawnChance))
 			if powerUpChance == 0:
 				powerUp = PowerUp(screen, (self.rect.x // SF, self.rect.y // SF, self.rect.w // SF, self.rect.h // SF))
 		else:
@@ -817,6 +824,7 @@ def HandleKeyboard(event):
 			if event.type == pg.KEYDOWN:
 				if event.key == pg.K_s:
 					gameState = "settings"
+					gameStates.append(gameState)
 
 				if event.key == pg.K_a:
 					player.direction[0] = -1
@@ -848,6 +856,7 @@ def HandleKeyboard(event):
 def QuitMenu():
 	global gameState
 	gameState = "quit menu"
+	gameStates.append(gameState)
 	for button in allButtons:
 		if button.type == gameState:
 			allButtons.remove(button)
@@ -880,9 +889,10 @@ def Load():
 		file.close()
 
 	numOfEnemies = 10 * gameData["level"]
-	playerData["bullets"]["numOfbullets"] = int(numOfEnemies * 1.5)
-	playerData["bullets"]["maxAmount"] = int(numOfEnemies * 1.5)
+	playerData["bullets"]["numOfbullets"] = numOfEnemies
+	playerData["bullets"]["maxAmount"] = numOfEnemies 
 	gameState = "game"
+	gameStates.append(gameState)
 
 
 def ButtonClick():
@@ -895,12 +905,17 @@ def ButtonClick():
 					Quit(False)
 				elif button.action == "no":
 					gameState = "game"
+					gameStates.append(gameState)
 
 				# start menu buttons
 				if button.action == "new save":
 					NewSave()
 				if button.action == "load save":
 					Load()
+				if button.action == "settings":
+					gameState = "settings"
+					gameStates.append(gameState)
+					SettingsMenu()
 				if button.action == "quit":
 					Quit()
 
@@ -921,7 +936,8 @@ def ButtonClick():
 					ChangeVolume("master", "down")
 
 				if button.action == "back":
-					gameState = "game"
+					gameState = gameStates[-2]
+					gameStates.append(gameState)
 
 
 def SliderClick(slider):
@@ -970,8 +986,9 @@ def SettingsMenu():
 
 def StartMenu():
 	title = Label(screen, (40, 20, 560, 60), "start menu", (colLightGray, colLightGray), ["Shooter", colLightGray, 16, "center-center"], [True, True, False])
-	startNewSave = HoldButton(screen, (230, 110, 200, 50), ("start menu", "new save"), (colLightGray, colLightGray), ("Start new save game.", colDarkGray))
-	loadSave = HoldButton(screen, (230, 190, 200, 50), ("start menu", "load save"), (colLightGray, colLightGray), ("Load save game.", colDarkGray))
+	startNewSave = HoldButton(screen, (230, 90, 200, 50), ("start menu", "new save"), (colLightGray, colLightGray), ("Start new save game.", colDarkGray))
+	loadSave = HoldButton(screen, (230, 150, 200, 50), ("start menu", "load save"), (colLightGray, colLightGray), ("Load save game.", colDarkGray))
+	settings = HoldButton(screen, (230, 210, 200, 50), ("start menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
 	exit = HoldButton(screen, (230, 270, 200, 50), ("start menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
 	
 
@@ -1065,6 +1082,7 @@ def NewSave():
 
 	Save()
 	gameState = "game"
+	gameStates.append(gameState)
 
 
 def CreateGameObjects():
