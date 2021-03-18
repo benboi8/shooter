@@ -71,7 +71,7 @@ savePath = "saveData.json"
 
 gameState = "start menu"
 
-powerUpSpawnChance = 100 # as percentage
+powerUpSpawnChance = 40 # as percentage
 numOfEnemies = 10
 
 gameData = {
