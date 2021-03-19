@@ -86,7 +86,8 @@ gameData = {
 }
 
 bulletData = {
-	"speed": 4.5
+	"speed": 4.5,
+	"size": 5
 }
 
 playerData = {
@@ -610,12 +611,12 @@ class Player:
 		if self.numOfbullets - 1 >= 0:
 			self.numOfbullets -= 1
 			if self.numberOfshots <= 1:
-				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
+				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), bulletData["size"], bulletData["size"]), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
 				self.isBulletCooldown = True
 			else:
-				bullet1 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
-				bullet2 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
-				bullet3 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
+				bullet1 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), bulletData["size"], bulletData["size"]), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
+				bullet2 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), bulletData["size"], bulletData["size"]), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
+				bullet3 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), bulletData["size"], bulletData["size"]), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
 				bullet2.direction = [-0.2, -1]
 				bullet3.direction = [0.2, -1]
 
