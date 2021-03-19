@@ -77,7 +77,7 @@ gameStates = [gameState]
 # as percentage
 # lower = more frequent
 # 0 = every time
-powerUpSpawnChance = 30
+powerUpSpawnChance = 10
 numOfEnemies = 10
 
 gameData = {
@@ -94,7 +94,7 @@ playerData = {
 	"health": 100,
 	"scoreAmount": 10,
 	"hurtAmount": 10,
-	"numberOfshots": 3,
+	"numberOfshots": 1,
 	"bullets": {
 		"numOfbullets": numOfEnemies,
 		"maxAmount": numOfEnemies,
@@ -115,17 +115,11 @@ enemyData = {
 
 powerUpData = {
 	"speed": 4,
-	"abilityNames": ["Add health", "Refill bullets", "Increase speed", "IncreaseShots"],
+	"abilityNames": ["Add health", "Increase speed", "IncreaseShots"],
 	"Add health": {
 		"color": colGreen,
 		"attribute": "health",
 		"value": 10,
-		"duration": 0,
-	},
-	"Refill bullets": {
-		"color": colBlue,
-		"attribute": "numOfbullets",
-		"value": playerData["bullets"]["maxAmount"],
 		"duration": 0,
 	},
 	"Increase speed": {
@@ -678,8 +672,8 @@ class Player:
 			pass
 
 	def Refill(self):
-		if self.numOfbullets <= self.data["bullets"]["maxAmount"]:
-			self.numOfbullets = self.data["bullets"]["maxAmount"]
+		if self.numOfbullets <= self.maxAmountBullets:
+			self.numOfbullets = self.maxAmountBullets
 		numOfbulletsLabel.UpdateText("Bullets: {}".format(self.numOfbullets))
 
 	def PowerUp(self, name, ability, value, duration):
@@ -689,6 +683,7 @@ class Player:
 				startPowerUpTime = dt.datetime.utcnow().strftime("%S")
 				endPowerUpTime = timedelta(minutes=0, seconds=int(startPowerUpTime) + duration)
 				self.activePowerUps.append((ability, endPowerUpTime))
+				self.Refill()
 
 		numOfbulletsLabel.UpdateText("Bullets: {}".format(self.numOfbullets))
 		healthLabel.UpdateText("Health: {}".format(self.health))
@@ -699,7 +694,7 @@ class Player:
 		self.score = 0
 		if self.health < 100:
 			self.health = 100
-		self.maxAmountBullets *= gameData["level"]
+		self.maxAmountBullets = 10 * gameData["level"]
 		self.numOfbullets = self.maxAmountBullets
 
 		healthLabel.UpdateText("Health: 100".format(self.health))
@@ -1040,7 +1035,7 @@ def SettingsMenu():
 	SFXSlider.ChangeRect()
 	masterSlider.value = round(masterVolume * 100)
 	masterSlider.ChangeRect()
-	
+
 	back = HoldButton(screen, (230, 270, 200, 50), ("settings", "back"), (colLightGray, colLightGray), ("Back.", colDarkGray), imageData=[buttonPath + "Back.png", tempButtonPath + "Back.png"])
 	# add resolution buttons
 
@@ -1272,7 +1267,7 @@ while running:
 		
 		if len(allEnemies) == 0:
 			gameData["level"] += 1
-			numOfEnemies = 10 * gameData["level"]
+			numOfEnemies = 10 * gameData["level"] + round(gameData["level"] * 1.5)
 			gameData["totalScore"] += player.score
 			player.LevelUp()
 			CreateEnemies()
