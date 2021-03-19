@@ -10,6 +10,7 @@ from os import listdir
 from os.path import isfile, join
 import sys
 
+
 # initialise pygame
 pg.init()
 clock = pg.time.Clock()
@@ -34,6 +35,7 @@ try:
 	backgroundMusic.play(loops=-1)
 except:
 	backgroundMusic = None
+	print("no music found")
 
 texturePath = "assets/textures/"
 tempTexturePath = "temp/assets/textures/"
@@ -520,6 +522,9 @@ class Bullet:
 
 		if self.rect.y >= player.rect.y:
 			self.rect.x = player.rect.x + random.randint(-5, 10)
+		else:
+			self.pos[0] += self.direction[0] * (self.speed * SF)
+			self.rect.x = self.pos[0]
 
 	def Destroy(self):
 		for listToAppend in self.lists:
@@ -585,9 +590,16 @@ class Player:
 	def Shoot(self):
 		if self.numOfbullets - 1 >= 0:
 			self.numOfbullets -= 1
-			for i in range(self.numberOfshots):
-				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF) + (i * 10), 5, 5), colBlack, lists=[allBullets])
-			
+			if self.numberOfshots <= 1:
+				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+			else:
+				bullet1 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+				bullet2 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+				bullet3 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+				bullet2.direction = [-0.5, -1]
+				bullet3.direction = [0.5, -1]
+
+
 			if self.numOfbullets < self.maxAmountBullets:
 				self.StartRefillTimer()	
 				self.refilling = True
@@ -610,8 +622,6 @@ class Player:
 				difference = self.bulletRefillRate
 			else:
 				difference = endTime - self.currentTime
-
-			print(endTime, difference)
 
 			bulletTimerLabel.UpdateText(str(difference))
 			if difference <= 0:
@@ -850,7 +860,8 @@ def HandleKeyboard(event):
 
 	if event.type == pg.MOUSEBUTTONDOWN:
 		if event.button == 1:
-			player.Shoot()
+			if gameState == "game":
+				player.Shoot()
 
 
 def QuitMenu():
@@ -943,7 +954,6 @@ def ButtonClick():
 def SliderClick(slider):
 	global musicVolume, SFXVolume, masterVolume
 	if slider.action == "music":
-		print(musicVolume, slider.value / 100)
 		if slider.direction == "left":
 			musicVolume = slider.value / 100
 		if slider.direction == "right":
@@ -962,7 +972,8 @@ def SliderClick(slider):
 			masterVolume = slider.value / 100
 
 
-	backgroundMusic.set_volume(musicVolume * masterVolume)
+	if backgroundMusic != None: 
+		backgroundMusic.set_volume(musicVolume * masterVolume)
 
 
 def SettingsMenu():
