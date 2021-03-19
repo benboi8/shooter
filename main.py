@@ -97,8 +97,8 @@ playerData = {
 	"numberOfshots": 1,
 	"bulletCooldown": 0.5,
 	"bullets": {
-		"numOfbullets": 10000000,# numOfEnemies,
-		"maxAmount": 10000000,# numOfEnemies,
+		"numOfbullets": numOfEnemies,
+		"maxAmount": numOfEnemies,
 		"refillRate": 5,
 	}
 }
@@ -836,14 +836,13 @@ def DrawLoop():
 def HandleKeyboard(event):
 	global gameState
 	if gameState != "start menu":
-		if event.type == pg.QUIT:
-			PauseMenu()
-		if event.type == pg.KEYDOWN:
-			if event.key == pg.K_ESCAPE:
-				PauseMenu()
-	
 		if gameState == "game":
+			if event.type == pg.QUIT:
+				PauseMenu()
 			if event.type == pg.KEYDOWN:
+				if event.key == pg.K_ESCAPE:
+					PauseMenu()
+
 				if event.key == pg.K_s:
 					gameState = "settings"
 					gameStates.append(gameState)
@@ -855,10 +854,10 @@ def HandleKeyboard(event):
 					player.direction[0] = 1
 	else:
 		if event.type == pg.QUIT:
-			Quit(False)
+			QuitMenu()
 		if event.type == pg.KEYDOWN:
 			if event.key == pg.K_ESCAPE:
-				Quit(False)
+				QuitMenu()
 
 
 	if event.type == pg.KEYUP:
@@ -882,12 +881,10 @@ def QuitMenu():
 		if button.type == gameState:
 			allButtons.remove(button)
 
-	x, y, w, h = 0, -100, WIDTH // SF, (HEIGHT // SF) + 100
+	Label(screen, (230, 40, 200, 50), "quit menu", (colDarkGray, colDarkGray), ("Are you sure you want to quit?", colLightGray, 32, "center-center"), extraText=[("All data will be saved on exit.", (390, 100), "center-center")])
 
-	Label(screen, (x, y, w, h), "quit menu", (colDarkGray, colDarkGray), ("Are you sure you want to quit?", colLightGray, 32, "center-center"), extraText=[("All data will be saved on exit.", (160, -60), "center-center")])
-
-	confirm = HoldButton(screen, ((x + w // 2) - 100 , 240, 200, 50), ("quit menu", "yes"), (colLightGray, colLightGray), ("YES", colDarkGray))
-	deny = HoldButton(screen, ((x + w // 2) - 100 , 300, 200, 50), ("quit menu", "no"), (colLightGray, colLightGray), ("NO", colDarkGray))
+	confirm = HoldButton(screen, (230, 220, 200, 50), ("quit menu", "yes"), (colLightGray, colLightGray), ("YES", colDarkGray))
+	deny = HoldButton(screen, (230, 280, 200, 50), ("quit menu", "no"), (colLightGray, colLightGray), ("NO", colDarkGray))
 
 
 def Quit(save=True):
@@ -910,10 +907,11 @@ def Load():
 		file.close()
 
 	numOfEnemies = 10 * gameData["level"]
-	playerData["bullets"]["numOfbullets"] = numOfEnemies
-	playerData["bullets"]["maxAmount"] = numOfEnemies 
-	gameState = "game"
-	gameStates.append(gameState)
+	CreateGameObjects()
+
+	numOfEnemiesLeftLabel.UpdateText("Enemies left: {}".format(len(allEnemies)))
+	totalScoreLabel.UpdateText("Total score: {}".format(gameData["totalScore"]))
+	levelLabel.UpdateText("Level: {}".format(gameData["level"]))
 
 
 def ButtonClick():
@@ -923,22 +921,24 @@ def ButtonClick():
 			if button.active:
 				# quit menu buttons
 				if button.action == "yes":
-					Quit(False)
+					Quit()
 				elif button.action == "no":
-					gameState = "game"
-					gameStates.append(gameState)
+					Back()
 
 				# start menu buttons
 				if button.action == "new save":
 					NewSave()
 				if button.action == "load save":
 					Load()
+					gameState = "game"
+					gameStates.append(gameState)
+
 				if button.action == "settings":
 					gameState = "settings"
 					gameStates.append(gameState)
 					SettingsMenu()
 				if button.action == "quit":
-					Quit()
+					QuitMenu()
 
 				# settings buttons
 				if button.action == "musicUp":
@@ -959,6 +959,10 @@ def ButtonClick():
 				if button.action == "back":
 					Back()
 					return
+
+				if button.action == "return":
+					gameState = "game"
+					gameStates.append(gameState)
 
 
 def SliderClick(slider):
@@ -990,7 +994,6 @@ def Back():
 	global gameState
 	gameState = gameStates[-2]
 	gameStates.append(gameState)
-	return
 
 
 def SettingsMenu():
@@ -1013,11 +1016,11 @@ def SettingsMenu():
 
 
 def StartMenu():
-	title = Label(screen, (40, 20, 560, 60), "start menu", (colLightGray, colLightGray), ["Shooter", colLightGray, 16, "center-center"], [True, True, False])
-	startNewSave = HoldButton(screen, (230, 90, 200, 50), ("start menu", "new save"), (colLightGray, colLightGray), ("Start new save game.", colDarkGray))
-	loadSave = HoldButton(screen, (230, 150, 200, 50), ("start menu", "load save"), (colLightGray, colLightGray), ("Load save game.", colDarkGray))
-	settings = HoldButton(screen, (230, 210, 200, 50), ("start menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
-	exit = HoldButton(screen, (230, 270, 200, 50), ("start menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
+	title = Label(screen, (40, 10, 560, 40), "start menu", (colLightGray, colLightGray), ["Shooter", colLightGray, 32, "center-center"], [True, True, False])
+	startNewSave = HoldButton(screen, (230, 60, 200, 50), ("start menu", "new save"), (colLightGray, colLightGray), ("Start new save game.", colDarkGray))
+	loadSave = HoldButton(screen, (230, 120, 200, 50), ("start menu", "load save"), (colLightGray, colLightGray), ("Load save game.", colDarkGray))
+	settings = HoldButton(screen, (230, 180, 200, 50), ("start menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
+	exit = HoldButton(screen, (230, 300, 200, 50), ("start menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
 	
 
 def PauseMenu():
@@ -1030,10 +1033,10 @@ def PauseMenu():
 		gameStates.append(gameState)
 
 
-	title = Label(screen, (230, 80, 200, 50), "paused", (colLightGray, colLightGray), ["Paused", colLightGray, 50, "center-center"], [True, True, False])
-	back = HoldButton(screen, (230, 140, 200, 50), ("paused", "back"), (colLightGray, colLightGray), ("Resume.", colDarkGray))
-	back = HoldButton(screen, (230, 200, 200, 50), ("paused", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
-	quit = HoldButton(screen, (230, 260, 200, 50), ("paused", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
+	title = Label(screen, (230, 40, 200, 50), "paused", (colLightGray, colLightGray), ["Paused", colLightGray, 50, "center-center"], [True, True, False])
+	returnButton = HoldButton(screen, (230, 100, 200, 50), ("paused", "return"), (colLightGray, colLightGray), ("Return.", colDarkGray))
+	settings = HoldButton(screen, (230, 160, 200, 50), ("paused", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
+	quit = HoldButton(screen, (230, 280, 200, 50), ("paused", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
 
 
 def ChangeVolume(soundtype, direction, value=0.1):
@@ -1127,6 +1130,7 @@ def NewSave():
 	Save()
 	gameState = "game"
 	gameStates.append(gameState)
+	CreateGameObjects()
 
 
 def CreateGameObjects():
@@ -1161,25 +1165,24 @@ def CreateEnemies():
 def CheckForSaveGame():
 	rootDirectory = os.getcwd()
 	filesInDirectory = [file for file in listdir(rootDirectory)]
-	saveFileName = "saveData.json"
+	saveFileName = ["saveData.json"]
 	saveExists = False
 	newDirectorys = []
 
 	for file in filesInDirectory:
-		if file == saveFileName:
+		if file in saveFileName:
 			saveExists = True
-		else:
+
+	if not saveExists:
 			with open(savePath, "w") as file:
 				json.dump(gameData, indent=2, fp=file)
 				file.close()
 
-		os.chdir(rootDirectory)
-
+	os.chdir(rootDirectory)
 
 CheckForSaveGame()
 StartMenu()
 SettingsMenu()
-CreateGameObjects()
 while running:
 	clock.tick(FPS)
 
