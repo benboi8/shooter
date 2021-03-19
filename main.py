@@ -10,7 +10,6 @@ from os import listdir
 from os.path import isfile, join
 import sys
 
-
 # initialise pygame
 pg.init()
 clock = pg.time.Clock()
@@ -66,7 +65,7 @@ allLabels = []
 allSliders = []
 allBullets = []
 allEnemies = []
-allPowerUps = [] 
+allPowerUps = []
 
 buttonWidth, buttonHeight = 30, 30
 
@@ -78,7 +77,7 @@ gameStates = [gameState]
 # as percentage
 # lower = more frequent
 # 0 = every time
-powerUpSpawnChance = 30 
+powerUpSpawnChance = 30
 numOfEnemies = 10
 
 gameData = {
@@ -384,7 +383,10 @@ class Slider:
 		self.value = max(round(((self.sliderRect.x - self.rect.x) / self.rect.w) * (self.bounds[1] + 1), 0), self.bounds[0])
 
 	def ChangeRect(self):
-		self.sliderRect.x = self.value * self.segmentLength
+		self.sliderRect.x = self.rect.x + (self.value * self.segmentLength)
+		if self.sliderRect.x >= self.rect.x + self.rect.w:
+			self.sliderRect.x = (self.rect.x + self.rect.w) - self.sliderRect.w
+		self.collisionRect = pg.Rect(self.sliderRect.x - self.sliderRect.h // 2, self.sliderRect.y, self.sliderRect.w + self.sliderRect.h, self.sliderRect.h)
 
 
 class Label:
@@ -954,7 +956,6 @@ def ButtonClick():
 				if button.action == "settings":
 					gameState = "settings"
 					gameStates.append(gameState)
-					SettingsMenu()
 				if button.action == "quit":
 					QuitMenu()
 
@@ -1015,6 +1016,7 @@ def Back():
 
 
 def SettingsMenu():
+	global musicSlider, SFXSlider, masterSlider
 	title = Label(screen, (40, 20, 560, 60), "settings", (colLightGray, colLightGray), ["Settings", colLightGray, 16, "center-center"], [True, True, False])
 	
 	soundTitle = Label(screen, (65, 120, 235, 20), "settings", (colLightGray, colDarkGray), ["Music Volume", colLightGray, 16, "center-center"], [False, False, False])
@@ -1031,6 +1033,13 @@ def SettingsMenu():
 	masterUp = HoldButton(screen, (580, 180, 20, 20), ("settings", "masterUp"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
 	masterSlider = Slider(screen, (65, 180, 515, 20), ("settings", "master"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
 	masterDown = HoldButton(screen, (45, 180, 20, 20), ("settings", "masterDown"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
+	
+	musicSlider.value = round(musicVolume * 100)
+	musicSlider.ChangeRect()
+	SFXSlider.value = round(sfxVolume * 100)
+	SFXSlider.ChangeRect()
+	masterSlider.value = round(masterVolume * 100)
+	masterSlider.ChangeRect()
 	
 	back = HoldButton(screen, (230, 270, 200, 50), ("settings", "back"), (colLightGray, colLightGray), ("Back.", colDarkGray), imageData=[buttonPath + "Back.png", tempButtonPath + "Back.png"])
 	# add resolution buttons
@@ -1061,32 +1070,51 @@ def PauseMenu():
 
 
 def ChangeVolume(soundtype, direction, value=0.1):
-	global musicVolume, sfxVolume, masterVolume
+	global musicVolume, sfxVolume, masterVolume, musicSlider, SFXSlider, masterSlider
+	if soundtype == "music":
+		if direction == "up":
+			if musicVolume + value <= 1.0:
+				musicVolume += value
+			else:
+				musicVolume = 1.0
+			musicSlider.value = round(musicVolume * 100)
+			musicSlider.ChangeRect()
+
+		if direction == "down":
+			if musicVolume - value >= 0.0:
+				musicVolume -= value
+			else:
+				musicVolume = 0.0
+			musicSlider.value = round(musicVolume * 100)
+			musicSlider.ChangeRect()
+
+	if soundtype == "SFX":
+		if direction == "up":
+			if sfxVolume + value <= 1.0:
+				sfxVolume += value
+			SFXSlider.value = round(sfxVolume * 100)
+			SFXSlider.ChangeRect()	
+
+		if direction == "down":
+			if sfxVolume - value >= 0.0:
+				sfxVolume -= value
+			SFXSlider.value = round(sfxVolume * 100)
+			SFXSlider.ChangeRect()
+
+	if soundtype == "master":
+		if direction == "up":
+			if masterVolume + value <= 1.0:
+				masterVolume += value
+			masterSlider.value = round(masterVolume * 100)
+			masterSlider.ChangeRect()
+
+		if direction == "down":
+			if masterVolume - value >= 0.0:
+				masterVolume -= value
+			masterSlider.value = round(masterVolume * 100)
+			masterSlider.ChangeRect()
+
 	if backgroundMusic != None:
-		if soundtype == "music":
-			if direction == "up":
-				if musicVolume + value <= 1.0:
-					musicVolume += value
-			if direction == "down":
-				if musicVolume - value >= 0.0:
-					musicVolume -= value
-
-		if soundtype == "SFX":
-			if direction == "up":
-				if sfxVolume + value <= 1.0:
-					sfxVolume += value
-			if direction == "down":
-				if sfxVolume - value >= 0.0:
-					sfxVolume -= value
-
-		if soundtype == "master":
-			if direction == "up":
-				if masterVolume + value <= 1.0:
-					masterVolume += value
-			if direction == "down":
-				if masterVolume - value >= 0.0:
-					masterVolume -= value
-
 		backgroundMusic.set_volume(musicVolume * masterVolume)
 
 
@@ -1242,7 +1270,6 @@ while running:
 			Quit()
 			print("YOU LOSE")
 		
-
 		if len(allEnemies) == 0:
 			gameData["level"] += 1
 			numOfEnemies = 10 * gameData["level"]
@@ -1253,7 +1280,6 @@ while running:
 			totalScoreLabel.UpdateText("Total score: {}".format(gameData["totalScore"]))
 			levelLabel.UpdateText("Level: {}".format(gameData["level"]))
 			Save()
-
 
 	DrawLoop()
 
