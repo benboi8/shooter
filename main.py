@@ -97,8 +97,8 @@ playerData = {
 	"hurtAmount": 10,
 	"numberOfshots": 3,
 	"bullets": {
-		"numOfbullets": 1000, # numOfEnemies,
-		"maxAmount": 1000, # numOfEnemies,
+		"numOfbullets": numOfEnemies,
+		"maxAmount": numOfEnemies,
 		"refillRate": 5,
 	}
 }
