@@ -39,6 +39,8 @@ except:
 
 buttonPath = "assets/textures/buttons/"
 tempButtonPath = "temp/assets/textures/buttons/"
+gamePath = "assets/textures/game/"
+tempGamePath = "temp/assets/textures/game/"
 
 # colours
 colBlack = (0, 0, 0)
@@ -93,11 +95,10 @@ playerData = {
 	"health": 100,
 	"scoreAmount": 10,
 	"hurtAmount": 10,
-	"numberOfshots": 1,
-	"bulletCooldown": 0.5,
+	"numberOfshots": 3,
 	"bullets": {
-		"numOfbullets": numOfEnemies,
-		"maxAmount": numOfEnemies,
+		"numOfbullets": 1000, # numOfEnemies,
+		"maxAmount": 1000, # numOfEnemies,
 		"refillRate": 5,
 	}
 }
@@ -493,7 +494,7 @@ class Label:
 
 
 class Bullet:
-	def __init__(self, surface, rect, color, lists=[allBullets], data=bulletData):
+	def __init__(self, surface, rect, color, lists=[allBullets], data=bulletData, imageData=[None]):
 		self.surface = surface
 		self.originalRect = rect
 		self.color = color
@@ -502,6 +503,12 @@ class Bullet:
 
 		self.direction = [0, -1]
 		self.speed = data["speed"]
+
+		self.imageData = imageData
+		if self.imageData[0] != None:
+			self.hasImage = True
+		else:
+			self.hasImage = False
 
 		self.Rescale()
 
@@ -512,8 +519,21 @@ class Bullet:
 		self.rect = pg.Rect(self.originalRect[0] * SF, self.originalRect[1] * SF, self.originalRect[2] * SF, self.originalRect[3] * SF)
 		self.pos = [self.rect.x, self.rect.y]
 
+		try:
+			if self.hasImage:
+				ScaleImage(self.imageData[0], (self.rect.w, self.rect.h), self.imageData[1])
+				self.image = pg.image.load(self.imageData[1])
+				self.image.convert()
+		except:
+			print("bullet has no image", self.imageData)
+			self.hasImage = False
+
 	def Draw(self):
-		pg.draw.rect(self.surface, self.color, self.rect)
+		if not self.hasImage:
+			pg.draw.rect(self.surface, self.color, self.rect)
+		else:
+			self.surface.blit(self.image, self.rect)
+
 
 	def Move(self):
 		if not self.rect.colliderect(0, 0, WIDTH, 100000000):
@@ -551,7 +571,6 @@ class Player:
 		self.bulletRefillRate = data["bullets"]["refillRate"]
 		self.maxAmountBullets = data["bullets"]["maxAmount"]
 		self.numberOfshots = data["numberOfshots"]
-		self.bulletCooldown = data["bulletCooldown"]
 
 		self.score = 0
 		self.scoreAmount = data["scoreAmount"]
@@ -595,12 +614,12 @@ class Player:
 		if self.numOfbullets - 1 >= 0:
 			self.numOfbullets -= 1
 			if self.numberOfshots <= 1:
-				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
 				self.isBulletCooldown = True
 			else:
-				bullet1 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
-				bullet2 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
-				bullet3 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+				bullet1 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
+				bullet2 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
+				bullet3 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
 				bullet2.direction = [-0.2, -1]
 				bullet3.direction = [0.2, -1]
 
@@ -880,7 +899,7 @@ def QuitMenu():
 		if button.type == gameState:
 			allButtons.remove(button)
 
-	Label(screen, (230, 40, 200, 50), "quit menu", (colDarkGray, colDarkGray), ("Are you sure you want to quit?", colLightGray, 32, "center-center"), extraText=[("All data will be saved on exit.", (390, 100), "center-center")])
+	Label(screen, (40, 30, 560, 40), "quit menu", (colDarkGray, colLightGray), ("Are you sure you want to quit?", colLightGray, 32, "center-center"), drawData=[True, True, False], extraText=[("All data will be saved on exit.", (200, 75), "center-center")])
 
 	confirm = HoldButton(screen, (230, 220, 200, 50), ("quit menu", "yes"), (colLightGray, colLightGray), ("YES", colDarkGray), imageData=[buttonPath + "Yes.png", tempButtonPath + "Yes.png"])
 	deny = HoldButton(screen, (230, 280, 200, 50), ("quit menu", "no"), (colLightGray, colLightGray), ("NO", colDarkGray), imageData=[buttonPath + "No.png", tempButtonPath + "No.png"])
@@ -1138,7 +1157,7 @@ def NewSave():
 def CreateGameObjects():
 	global healthLabel, scoreLabel, numOfbulletsLabel, bulletTimerLabel, player, currentPowerUp, numOfEnemiesLeftLabel, totalScoreLabel, levelLabel
 	
-	player = Player(screen, ((WIDTH // 2) // SF, 325, 10, 10), colWhite)
+	player = Player(screen, ((WIDTH // 2) // SF, 325, 10, 10), colWhite, imageData=[gamePath + "Player.png", tempGamePath + "Player.png"])
 	CreateEnemies()
 
 	healthLabel = Label(screen, (0, (HEIGHT // SF) - 15, 50, 15), "game", (colLightGray, colDarkGray), ("Health: 100", colLightGray, 8, "center-center"), (False, False, False))
