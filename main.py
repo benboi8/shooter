@@ -868,6 +868,13 @@ def HandleKeyboard(event):
 
 				if event.key == pg.K_d:
 					player.direction[0] = 1
+		else:
+			if event.type == pg.QUIT:
+				QuitMenu()
+			if event.type == pg.KEYDOWN:
+				if event.key == pg.K_ESCAPE:
+					QuitMenu()
+					
 	else:
 		if event.type == pg.QUIT:
 			QuitMenu()
@@ -979,6 +986,9 @@ def ButtonClick():
 					gameState = "game"
 					gameStates.append(gameState)
 
+				if button.action == "retry":
+					NewSave()
+
 
 def SliderClick(slider):
 	global musicVolume, SFXVolume, masterVolume
@@ -1058,11 +1068,17 @@ def PauseMenu():
 		gameState = "game"
 		gameStates.append(gameState)
 
-
 	title = Label(screen, (230, 40, 200, 50), "paused", (colLightGray, colLightGray), ["Paused", colLightGray, 50, "center-center"], [True, True, False])
 	returnButton = HoldButton(screen, (230, 160, 200, 50), ("paused", "return"), (colLightGray, colLightGray), ("Return.", colDarkGray), imageData=[buttonPath + "Return.png", tempButtonPath + "Return.png"])
 	settings = HoldButton(screen, (230, 220, 200, 50), ("paused", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray), imageData=[buttonPath + "Settings.png", tempButtonPath + "Settings.png"])
 	quit = HoldButton(screen, (230, 280, 200, 50), ("paused", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray), imageData=[buttonPath + "Quit.png", tempButtonPath + "Quit.png"])
+
+
+def LoseMenu():
+	title = Label(screen, (230, 40, 200, 50), "lose menu", (colLightGray, colLightGray), ["You Lose!", colLightGray, 50, "center-center"], [True, True, False])
+	retry = HoldButton(screen, (230, 140, 200, 50), ("lose menu", "retry"), (colLightGray, colLightGray), ("Retry.", colDarkGray), imageData=[buttonPath + "Retry.png", tempButtonPath + "Retry.png"])
+	settings = HoldButton(screen, (230, 200, 200, 50), ("lose menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray), imageData=[buttonPath + "Settings.png", tempButtonPath + "Settings.png"])
+	quit = HoldButton(screen, (230, 260, 200, 50), ("lose menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray), imageData=[buttonPath + "Quit.png", tempButtonPath + "Quit.png"])
 
 
 def ChangeVolume(soundtype, direction, value=0.1):
@@ -1122,7 +1138,8 @@ def NewSave():
 	}
 
 	bulletData = {
-		"speed": 4.5
+		"speed": 4.5,
+		"size": 5
 	}
 
 	playerData = {
@@ -1130,11 +1147,11 @@ def NewSave():
 		"health": 100,
 		"scoreAmount": 10,
 		"hurtAmount": 10,
+		"numberOfshots": 1,
 		"bullets": {
-			"numOfbullets": int(numOfEnemies * 1.5),
-			"maxAmount": int(numOfEnemies * 1.5),
+			"numOfbullets": numOfEnemies,
+			"maxAmount": numOfEnemies,
 			"refillRate": 5,
-			"numberOfshots": 5
 		}
 	}
 
@@ -1151,24 +1168,24 @@ def NewSave():
 
 	powerUpData = {
 		"speed": 4,
-		"abilityNames": ["Add health", "Refill bullets", "Increase speed"],
+		"abilityNames": ["Add health", "Increase speed", "IncreaseShots"],
 		"Add health": {
 			"color": colGreen,
 			"attribute": "health",
 			"value": 10,
 			"duration": 0,
 		},
-		"Refill bullets": {
-			"color": colBlue,
-			"attribute": "numOfbullets",
-			"value": playerData["bullets"]["maxAmount"],
-			"duration": 0,
-		},
 		"Increase speed": {
 			"color": colOrange,
 			"attribute": "speed",
-			"value": 3 * SF,
+			"value": 1.5 * SF,
 			"duration": 5,
+		},
+		"IncreaseShots": {
+			"color": colYellow,
+			"attribute": "numberOfshots",
+			"value": 2,
+			"duration": 15,	
 		}
 	}
 
@@ -1228,6 +1245,7 @@ def CheckForSaveGame():
 CheckForSaveGame()
 StartMenu()
 SettingsMenu()
+LoseMenu()
 while running:
 	clock.tick(FPS)
 
@@ -1263,10 +1281,9 @@ while running:
 			powerUp.Move()
 
 		if player.health <= 0:
-			Quit()
-			print("YOU LOSE")
+			gameState = "lose menu"
 		
-		if len(allEnemies) == 0:
+		if len(allEnemies) == 0 and player.health > 0:
 			gameData["level"] += 1
 			numOfEnemies = 10 * gameData["level"] + round(gameData["level"] * 1.5)
 			gameData["totalScore"] += player.score
