@@ -77,7 +77,7 @@ gameStates = [gameState]
 # as percentage
 # lower = more frequent
 # 0 = every time
-powerUpSpawnChance = 10
+powerUpSpawnChance = 15
 numOfEnemies = 10
 
 gameData = {
