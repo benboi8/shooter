@@ -37,9 +37,8 @@ except:
 	backgroundMusic = None
 	print("no music found")
 
-texturePath = "assets/textures/"
-tempTexturePath = "temp/assets/textures/"
-
+buttonPath = "assets/textures/buttons/"
+tempButtonPath = "temp/assets/textures/buttons/"
 
 # colours
 colBlack = (0, 0, 0)
@@ -239,7 +238,7 @@ class HoldButton:
 				self.image = pg.image.load(self.imageData[1])
 				self.image.convert()
 		except:
-			print("{} has no image".format(self.action))
+			print("{} has no image".format(self.action), self.imageData)
 			self.hasImage = False
 
 	def Draw(self):
@@ -883,8 +882,8 @@ def QuitMenu():
 
 	Label(screen, (230, 40, 200, 50), "quit menu", (colDarkGray, colDarkGray), ("Are you sure you want to quit?", colLightGray, 32, "center-center"), extraText=[("All data will be saved on exit.", (390, 100), "center-center")])
 
-	confirm = HoldButton(screen, (230, 220, 200, 50), ("quit menu", "yes"), (colLightGray, colLightGray), ("YES", colDarkGray))
-	deny = HoldButton(screen, (230, 280, 200, 50), ("quit menu", "no"), (colLightGray, colLightGray), ("NO", colDarkGray))
+	confirm = HoldButton(screen, (230, 220, 200, 50), ("quit menu", "yes"), (colLightGray, colLightGray), ("YES", colDarkGray), imageData=[buttonPath + "Yes.png", tempButtonPath + "Yes.png"])
+	deny = HoldButton(screen, (230, 280, 200, 50), ("quit menu", "no"), (colLightGray, colLightGray), ("NO", colDarkGray), imageData=[buttonPath + "No.png", tempButtonPath + "No.png"])
 
 
 def Quit(save=True):
@@ -999,28 +998,31 @@ def Back():
 def SettingsMenu():
 	title = Label(screen, (40, 20, 560, 60), "settings", (colLightGray, colLightGray), ["Settings", colLightGray, 16, "center-center"], [True, True, False])
 	
-	musicUp = HoldButton(screen, (300, 100, 20, 20), ("settings", "musicUp"), (colLightGray, colLightGray), ("M Up.", colDarkGray))
-	musicSlider = Slider(screen, (65, 100, 235, 20), ("settings", "music"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
-	musicDown = HoldButton(screen, (45, 100, 20, 20), ("settings", "musicDown"), (colLightGray, colLightGray), ("M Down.", colDarkGray))
+	soundTitle = Label(screen, (65, 120, 235, 20), "settings", (colLightGray, colDarkGray), ["Music Volume", colLightGray, 16, "center-center"], [False, False, False])
+	musicUp = HoldButton(screen, (300, 120, 20, 20), ("settings", "musicUp"), (colLightGray, colLightGray), ("M Up.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
+	musicSlider = Slider(screen, (65, 120, 235, 20), ("settings", "music"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
+	musicDown = HoldButton(screen, (45, 120, 20, 20), ("settings", "musicDown"), (colLightGray, colLightGray), ("M Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
 	
-	SFXup = HoldButton(screen, (580, 100, 20, 20), ("settings", "SFXup"), (colLightGray, colLightGray), ("SFX Up.", colDarkGray))
-	SFXSlider = Slider(screen, (345, 100, 235, 20), ("settings", "SFX"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
-	SFXDown = HoldButton(screen, (325, 100, 20, 20), ("settings", "SFXDown"), (colLightGray, colLightGray), ("SFX Down.", colDarkGray))
+	soundTitle = Label(screen, (345, 120, 235, 20), "settings", (colLightGray, colDarkGray), ["SFX Volume", colLightGray, 16, "center-center"], [False, False, False])
+	SFXup = HoldButton(screen, (580, 120, 20, 20), ("settings", "SFXup"), (colLightGray, colLightGray), ("SFX Up.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
+	SFXSlider = Slider(screen, (345, 120, 235, 20), ("settings", "SFX"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
+	SFXDown = HoldButton(screen, (325, 120, 20, 20), ("settings", "SFXDown"), (colLightGray, colLightGray), ("SFX Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
 	
-	masterUp = HoldButton(screen, (580, 140, 20, 20), ("settings", "masterUp"), (colLightGray, colLightGray), ("Master Down.", colDarkGray))
-	masterSlider = Slider(screen, (65, 140, 515, 20), ("settings", "master"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
-	masterDown = HoldButton(screen, (45, 140, 20, 20), ("settings", "masterDown"), (colLightGray, colLightGray), ("Master Down.", colDarkGray))
+	soundTitle = Label(screen, (65, 180, 515, 20), "settings", (colLightGray, colDarkGray), ["Master Volume", colLightGray, 16, "center-center"], [False, False, False])
+	masterUp = HoldButton(screen, (580, 180, 20, 20), ("settings", "masterUp"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
+	masterSlider = Slider(screen, (65, 180, 515, 20), ("settings", "master"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
+	masterDown = HoldButton(screen, (45, 180, 20, 20), ("settings", "masterDown"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
 	
-	back = HoldButton(screen, (230, 270, 200, 50), ("settings", "back"), (colLightGray, colLightGray), ("Back.", colDarkGray))
+	back = HoldButton(screen, (230, 270, 200, 50), ("settings", "back"), (colLightGray, colLightGray), ("Back.", colDarkGray), imageData=[buttonPath + "Back.png", tempButtonPath + "Back.png"])
 	# add resolution buttons
 
 
 def StartMenu():
-	title = Label(screen, (40, 10, 560, 40), "start menu", (colLightGray, colLightGray), ["Shooter", colLightGray, 32, "center-center"], [True, True, False])
-	startNewSave = HoldButton(screen, (230, 60, 200, 50), ("start menu", "new save"), (colLightGray, colLightGray), ("Start new save game.", colDarkGray))
-	loadSave = HoldButton(screen, (230, 120, 200, 50), ("start menu", "load save"), (colLightGray, colLightGray), ("Load save game.", colDarkGray))
-	settings = HoldButton(screen, (230, 180, 200, 50), ("start menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
-	exit = HoldButton(screen, (230, 300, 200, 50), ("start menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
+	title = Label(screen, (40, 30, 560, 40), "start menu", (colLightGray, colLightGray), ["Shooter", colLightGray, 32, "center-center"], [True, True, False])
+	startNewSave = HoldButton(screen, (230, 90, 200, 50), ("start menu", "new save"), (colLightGray, colLightGray), ("Start new save game.", colDarkGray), imageData=[buttonPath + "New.png", tempButtonPath + "New.png"])
+	loadSave = HoldButton(screen, (230, 150, 200, 50), ("start menu", "load save"), (colLightGray, colLightGray), ("Load save game.", colDarkGray), imageData=[buttonPath + "Load.png", tempButtonPath + "Load.png"])
+	settings = HoldButton(screen, (230, 210, 200, 50), ("start menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray), imageData=[buttonPath + "Settings.png", tempButtonPath + "Settings.png"])
+	exit = HoldButton(screen, (230, 270, 200, 50), ("start menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray), imageData=[buttonPath + "Quit.png", tempButtonPath + "Quit.png"])
 	
 
 def PauseMenu():
@@ -1034,9 +1036,9 @@ def PauseMenu():
 
 
 	title = Label(screen, (230, 40, 200, 50), "paused", (colLightGray, colLightGray), ["Paused", colLightGray, 50, "center-center"], [True, True, False])
-	returnButton = HoldButton(screen, (230, 100, 200, 50), ("paused", "return"), (colLightGray, colLightGray), ("Return.", colDarkGray))
-	settings = HoldButton(screen, (230, 160, 200, 50), ("paused", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
-	quit = HoldButton(screen, (230, 280, 200, 50), ("paused", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
+	returnButton = HoldButton(screen, (230, 160, 200, 50), ("paused", "return"), (colLightGray, colLightGray), ("Return.", colDarkGray), imageData=[buttonPath + "Return.png", tempButtonPath + "Return.png"])
+	settings = HoldButton(screen, (230, 220, 200, 50), ("paused", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray), imageData=[buttonPath + "Settings.png", tempButtonPath + "Settings.png"])
+	quit = HoldButton(screen, (230, 280, 200, 50), ("paused", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray), imageData=[buttonPath + "Quit.png", tempButtonPath + "Quit.png"])
 
 
 def ChangeVolume(soundtype, direction, value=0.1):
