@@ -74,7 +74,10 @@ savePath = "saveData.json"
 gameState = "start menu"
 gameStates = [gameState]
 
-powerUpSpawnChance = 40 # as percentage
+# as percentage
+# lower = more frequent
+# 0 = every time
+powerUpSpawnChance = 30 
 numOfEnemies = 10
 
 gameData = {
@@ -92,9 +95,10 @@ playerData = {
 	"scoreAmount": 10,
 	"hurtAmount": 10,
 	"numberOfshots": 1,
+	"bulletCooldown": 0.5,
 	"bullets": {
-		"numOfbullets": numOfEnemies,
-		"maxAmount": numOfEnemies,
+		"numOfbullets": 10000000,# numOfEnemies,
+		"maxAmount": 10000000,# numOfEnemies,
 		"refillRate": 5,
 	}
 }
@@ -548,6 +552,7 @@ class Player:
 		self.bulletRefillRate = data["bullets"]["refillRate"]
 		self.maxAmountBullets = data["bullets"]["maxAmount"]
 		self.numberOfshots = data["numberOfshots"]
+		self.bulletCooldown = data["bulletCooldown"]
 
 		self.score = 0
 		self.scoreAmount = data["scoreAmount"]
@@ -592,17 +597,18 @@ class Player:
 			self.numOfbullets -= 1
 			if self.numberOfshots <= 1:
 				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
+				self.isBulletCooldown = True
 			else:
 				bullet1 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
 				bullet2 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
 				bullet3 = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), 5, 5), colBlack, lists=[allBullets])
-				bullet2.direction = [-0.5, -1]
-				bullet3.direction = [0.5, -1]
-
+				bullet2.direction = [-0.2, -1]
+				bullet3.direction = [0.2, -1]
 
 			if self.numOfbullets < self.maxAmountBullets:
 				self.StartRefillTimer()	
 				self.refilling = True
+
 		numOfbulletsLabel.UpdateText("Bullets: {}".format(self.numOfbullets))
 
 	def StartRefillTimer(self):
@@ -615,13 +621,14 @@ class Player:
 		if self.refilling:
 			endTime = self.endFillTime.seconds
 
-			if endTime >= 65:
-				endTime -= 60
-
-			if self.currentTime == 0:
-				difference = self.bulletRefillRate
+			if self.currentTime <= 5:
+				if endTime >= 60:
+					endTime -= 60
 			else:
-				difference = endTime - self.currentTime
+				if endTime >= 65:
+					endTime -= 60
+
+			difference = endTime - self.currentTime
 
 			bulletTimerLabel.UpdateText(str(difference))
 			if difference <= 0:
@@ -630,10 +637,15 @@ class Player:
 
 		for powerUpData in self.activePowerUps:
 			endTime = powerUpData[1].seconds
-			if endTime >= 60:
-				endTime -= 60
+			if self.currentTime <= 5:
+				if endTime >= 60:
+					endTime -= 60
+			else:
+				if endTime >= 65:
+					endTime -= 60
 
 			difference = endTime - self.currentTime
+
 			if difference <= 0:
 				self.RestoreDeafualtValues(powerUpData)
 
@@ -825,10 +837,10 @@ def HandleKeyboard(event):
 	global gameState
 	if gameState != "start menu":
 		if event.type == pg.QUIT:
-			QuitMenu()
+			PauseMenu()
 		if event.type == pg.KEYDOWN:
 			if event.key == pg.K_ESCAPE:
-				QuitMenu()
+				PauseMenu()
 	
 		if gameState == "game":
 			if event.type == pg.KEYDOWN:
@@ -841,14 +853,12 @@ def HandleKeyboard(event):
 
 				if event.key == pg.K_d:
 					player.direction[0] = 1
-
 	else:
 		if event.type == pg.QUIT:
 			Quit(False)
 		if event.type == pg.KEYDOWN:
 			if event.key == pg.K_ESCAPE:
 				Quit(False)
-
 
 
 	if event.type == pg.KEYUP:
@@ -947,8 +957,8 @@ def ButtonClick():
 					ChangeVolume("master", "down")
 
 				if button.action == "back":
-					gameState = gameStates[-2]
-					gameStates.append(gameState)
+					Back()
+					return
 
 
 def SliderClick(slider):
@@ -974,6 +984,13 @@ def SliderClick(slider):
 
 	if backgroundMusic != None: 
 		backgroundMusic.set_volume(musicVolume * masterVolume)
+
+
+def Back():
+	global gameState
+	gameState = gameStates[-2]
+	gameStates.append(gameState)
+	return
 
 
 def SettingsMenu():
@@ -1002,6 +1019,22 @@ def StartMenu():
 	settings = HoldButton(screen, (230, 210, 200, 50), ("start menu", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
 	exit = HoldButton(screen, (230, 270, 200, 50), ("start menu", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
 	
+
+def PauseMenu():
+	global gameState
+	if gameState != "paused":
+		gameState = "paused"
+		gameStates.append(gameState)
+	else:
+		gameState = "game"
+		gameStates.append(gameState)
+
+
+	title = Label(screen, (230, 80, 200, 50), "paused", (colLightGray, colLightGray), ["Paused", colLightGray, 50, "center-center"], [True, True, False])
+	back = HoldButton(screen, (230, 140, 200, 50), ("paused", "back"), (colLightGray, colLightGray), ("Resume.", colDarkGray))
+	back = HoldButton(screen, (230, 200, 200, 50), ("paused", "settings"), (colLightGray, colLightGray), ("Settings.", colDarkGray))
+	quit = HoldButton(screen, (230, 260, 200, 50), ("paused", "quit"), (colLightGray, colLightGray), ("Quit.", colDarkGray))
+
 
 def ChangeVolume(soundtype, direction, value=0.1):
 	global musicVolume, sfxVolume, masterVolume
