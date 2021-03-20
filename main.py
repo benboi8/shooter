@@ -85,7 +85,7 @@ gameStates = [gameState]
 # as percentage
 # lower = more frequent
 # 0 = every time
-powerUpSpawnChance = 15
+powerUpSpawnChance = 0 # 15
 numOfEnemies = 10
 
 gameData = {
@@ -124,24 +124,27 @@ enemyData = {
 
 powerUpData = {
 	"speed": 4,
-	"abilityNames": ["Add health", "Increase speed", "IncreaseShots"],
+	"abilityNames": ["Add health", "IncreaseSpeed", "IncreaseShots"],
 	"Add health": {
 		"color": colGreen,
 		"attribute": "health",
 		"value": 10,
 		"duration": 0,
+		"imagePath": "Add health.png"
 	},
-	"Increase speed": {
+	"IncreaseSpeed": {
 		"color": colOrange,
 		"attribute": "speed",
 		"value": 1.5 * SF,
 		"duration": 5,
+		"imagePath": "IncreaseSpeed.png"
 	},
 	"IncreaseShots": {
 		"color": colYellow,
 		"attribute": "numberOfshots",
 		"value": 2,
 		"duration": 15,	
+		"imagePath": "IncreaseShots.png"
 	}
 }
 
@@ -841,6 +844,14 @@ class PowerUp:
 		self.value = self.data[self.abilityName]["value"]
 		self.duration = self.data[self.abilityName]["duration"]
 
+		self.image = data[self.abilityName]["imagePath"]
+		self.imageData = [gamePath + self.image, tempGamePath + self.image]
+		if self.image:
+			self.hasImage = True
+		else:
+			self.hasImage = False
+			print("Power up: {}, image not found".format(self.abilityName))
+
 		self.Rescale()
 
 		for listToAppend in self.lists:
@@ -849,9 +860,22 @@ class PowerUp:
 	def Rescale(self):
 		self.rect = pg.Rect(self.originalRect[0] * SF, self.originalRect[1] * SF, self.originalRect[2] * SF, self.originalRect[3] * SF)
 		self.pos = [self.rect.x, self.rect.y]
+		if self.hasImage:
+			try:
+				ScaleImage(self.imageData[0], (self.rect.w, self.rect.h), self.imageData[1])
+				self.image = pg.image.load(self.imageData[1])
+				self.image.convert()
+			except:
+				print("Power up: {}, image not found".format(self.abilityName))		
+				self.hasImage = False
+
+
 
 	def Draw(self):
-		pg.draw.rect(self.surface, self.color, self.rect)
+		if not self.hasImage:
+			pg.draw.rect(self.surface, self.color, self.rect)
+		else:
+			self.surface.blit(self.image, self.rect)
 
 	def Move(self):
 		if self.rect.y >= HEIGHT:
