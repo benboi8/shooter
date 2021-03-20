@@ -9,6 +9,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 import sys
+import webbrowser
 
 # initialise pygame
 pg.init()
@@ -46,8 +47,8 @@ buttonPath = "assets/textures/buttons/"
 tempButtonPath = "temp/assets/textures/buttons/"
 gamePath = "assets/textures/game/"
 tempGamePath = "temp/assets/textures/game/"
-
 soundPath = "assets/sounds/"
+githubLinkCode = "http://bit.ly/3c2Ti8M"
 
 # colours
 colBlack = (0, 0, 0)
@@ -85,7 +86,7 @@ gameStates = [gameState]
 # as percentage
 # lower = more frequent
 # 0 = every time
-powerUpSpawnChance = 0 # 15
+powerUpSpawnChance = 15
 numOfEnemies = 10
 
 gameData = {
@@ -1045,6 +1046,7 @@ def ButtonClick():
 				if button.action == "settings":
 					gameState = "settings"
 					gameStates.append(gameState)
+					return
 				if button.action == "quit":
 					QuitMenu()
 
@@ -1074,6 +1076,9 @@ def ButtonClick():
 
 				if button.action == "retry":
 					NewSave()
+
+				if button.action == "githubLink":
+					webbrowser.open(githubLinkCode)
 
 
 def SliderClick(slider):
@@ -1134,6 +1139,8 @@ def SettingsMenu():
 	SFXSlider.ChangeRect()
 	masterSlider.value = round(masterVolume * 100)
 	masterSlider.ChangeRect()
+
+	githubLinkButton = HoldButton(screen, (230, 210, 200, 50), ("settings", "githubLink"), (colLightGray, colLightGray), ("GitHub.", colDarkGray), imageData=[buttonPath + "Github.png", tempButtonPath + "Github.png"])
 
 	back = HoldButton(screen, (230, 270, 200, 50), ("settings", "back"), (colLightGray, colLightGray), ("Back.", colDarkGray), imageData=[buttonPath + "Back.png", tempButtonPath + "Back.png"])
 
