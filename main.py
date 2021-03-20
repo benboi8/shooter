@@ -21,25 +21,33 @@ running = True
 # 3 = 1920, 1080
 SF = 2
 WIDTH, HEIGHT = 640 * SF, 360 * SF
-screen = pg.display.set_mode((WIDTH, HEIGHT), pg.DOUBLEBUF | pg.HWSURFACE, vsync=1)
+screen = pg.display.set_mode((WIDTH, HEIGHT), pg.DOUBLEBUF | pg.HWSURFACE)
 FPS = 60
 
-musicVolume = 0.0
-sfxVolume = 0.5
-masterVolume = 1.0
+musicVolume = 0.25
+sfxVolume = 0.25
+masterVolume = 0.5
 
 try:
-	backgroundMusic = pg.mixer.Sound("assets/sounds/background.wav")
+	backgroundMusic = pg.mixer.Sound("assets/sounds/backgroundMusic.mp3")
 	backgroundMusic.set_volume(musicVolume * masterVolume)
 	backgroundMusic.play(loops=-1)
 except:
-	backgroundMusic = None
-	print("no music found")
+	print("no music found.")
+
+try:
+	buttonClickSound = pg.mixer.Sound("assets/sounds/buttonClick.wav")
+	buttonClickSound.set_volume(sfxVolume * masterVolume)
+except:
+	print("buttonClickSound not found.")
+
 
 buttonPath = "assets/textures/buttons/"
 tempButtonPath = "temp/assets/textures/buttons/"
 gamePath = "assets/textures/game/"
 tempGamePath = "temp/assets/textures/game/"
+
+soundPath = "assets/sounds/"
 
 # colours
 colBlack = (0, 0, 0)
@@ -574,8 +582,21 @@ class Player:
 		self.health = 100
 		self.hurtAmount = data["hurtAmount"]
 
+
 		self.refilling = False
 		self.activePowerUps = []
+
+		try:
+			self.powerUpSound = pg.mixer.Sound(soundPath + "powerUp.wav")
+			self.powerUpSound.set_volume(sfxVolume + masterVolume)
+		except:
+			print("powerUpSound not found.")
+		try:
+			self.shootSound = pg.mixer.Sound(soundPath + "shoot.wav")
+			self.shootSound.set_volume(sfxVolume + masterVolume)
+		except:
+			print("shootSound not found.")
+
 
 		self.imageData = imageData
 		if self.imageData[0] != None:
@@ -610,6 +631,11 @@ class Player:
 	def Shoot(self):
 		if self.numOfbullets - 1 >= 0:
 			self.numOfbullets -= 1
+			try:
+				self.shootSound.set_volume(sfxVolume + masterVolume)
+				self.shootSound.play()
+			except:
+				pass
 			if self.numberOfshots <= 1:
 				bullet = Bullet(screen, (((player.rect.x + player.rect.w // 2) - 5) // SF, (player.rect.y // SF), bulletData["size"], bulletData["size"]), colBlack, lists=[allBullets], imageData=[gamePath + "Bullet.png", tempGamePath + "Bullet.png"])
 				self.isBulletCooldown = True
@@ -678,6 +704,12 @@ class Player:
 		numOfbulletsLabel.UpdateText("Bullets: {}".format(self.numOfbullets))
 
 	def PowerUp(self, name, ability, value, duration):
+		try:
+			self.powerUpSound.set_volume(sfxVolume + masterVolume)
+			self.powerUpSound.play()
+		except:
+			pass
+
 		if ability in self.__dict__:
 			self.__dict__[ability] += value
 			if duration > 0:
@@ -705,12 +737,18 @@ class Player:
 
 
 class Enemy:
-	def __init__(self, surface, rect, color, lists=[allEnemies], data=enemyData):
+	def __init__(self, surface, rect, color, lists=[allEnemies], data=enemyData, imageData=[None]):
 		self.surface = surface
 		self.originalRect = rect
 		self.color = color
 		self.data = data
 		self.lists = lists
+
+		try:
+			self.explodeSound = pg.mixer.Sound(soundPath + "enemyExplode.wav")
+			self.explodeSound.set_volume(sfxVolume + masterVolume)
+		except:
+			print("explodeSound not found.")
 
 		xDir = random.randint(-1, 1)
 		while xDir == 0:
@@ -718,6 +756,12 @@ class Enemy:
 
 		self.direction = [xDir, 1]
 		self.speed = [self.data["speed"]["x"] * SF, self.data["speed"]["y"] * SF]
+
+		self.imageData = imageData
+		if self.imageData[0] != None:
+			self.hasImage = True
+		else:
+			self.hasImage = False
 
 		self.Rescale()
 
@@ -727,9 +771,20 @@ class Enemy:
 	def Rescale(self):
 		self.rect = pg.Rect(self.originalRect[0] * SF, self.originalRect[1] * SF, self.originalRect[2] * SF, self.originalRect[3] * SF)
 		self.pos = [self.rect.x, self.rect.y]
+		try:
+			if self.hasImage:
+				ScaleImage(self.imageData[0], (self.rect.w, self.rect.h), self.imageData[1])
+				self.image = pg.image.load(self.imageData[1])
+				self.image.convert()
+		except:
+			print("enemy has no image", self.imageData)
+			self.hasImage = False
 
 	def Draw(self):
-		pg.draw.rect(self.surface, self.color, self.rect)
+		if not self.hasImage:
+			pg.draw.rect(self.surface, self.color, self.rect)
+		else:
+			self.surface.blit(self.image, self.rect)
 
 	def Move(self):
 		self.pos[0] += self.direction[0] * self.speed[0]
@@ -750,6 +805,8 @@ class Enemy:
 
 	def Destroy(self, positive):
 		try:
+			self.explodeSound.set_volume(sfxVolume + masterVolume)
+			self.explodeSound.play()
 			for listToAppend in self.lists:
 				listToAppend.remove(self)
 		except:
@@ -942,6 +999,11 @@ def ButtonClick():
 	for button in allButtons:
 		if button.type == gameState:
 			if button.active:
+				try:
+					buttonClickSound.set_volume(sfxVolume * masterVolume)
+					buttonClickSound.play()
+				except:
+					pass
 				# quit menu buttons
 				if button.action == "yes":
 					Quit()
@@ -991,7 +1053,7 @@ def ButtonClick():
 
 
 def SliderClick(slider):
-	global musicVolume, SFXVolume, masterVolume
+	global musicVolume, sfxVolume, masterVolume
 	if slider.action == "music":
 		if slider.direction == "left":
 			musicVolume = slider.value / 100
@@ -1000,9 +1062,9 @@ def SliderClick(slider):
 
 	if slider.action == "SFX":
 		if slider.direction == "left":
-			SFXVolume = slider.value / 100
+			sfxVolume = slider.value / 100
 		if slider.direction == "right":
-			SFXVolume = slider.value / 100
+			sfxVolume = slider.value / 100
 
 	if slider.action == "master":
 		if slider.direction == "left":
@@ -1011,8 +1073,10 @@ def SliderClick(slider):
 			masterVolume = slider.value / 100
 
 
-	if backgroundMusic != None: 
+	try:
 		backgroundMusic.set_volume(musicVolume * masterVolume)
+	except:
+		pass
 
 
 def Back():
@@ -1025,20 +1089,20 @@ def SettingsMenu():
 	global musicSlider, SFXSlider, masterSlider
 	title = Label(screen, (40, 20, 560, 60), "settings", (colLightGray, colLightGray), ["Settings", colLightGray, 16, "center-center"], [True, True, False])
 	
-	soundTitle = Label(screen, (65, 120, 235, 20), "settings", (colLightGray, colDarkGray), ["Music Volume", colLightGray, 16, "center-center"], [False, False, False])
-	musicUp = HoldButton(screen, (300, 120, 20, 20), ("settings", "musicUp"), (colLightGray, colLightGray), ("M Up.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
-	musicSlider = Slider(screen, (65, 120, 235, 20), ("settings", "music"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
-	musicDown = HoldButton(screen, (45, 120, 20, 20), ("settings", "musicDown"), (colLightGray, colLightGray), ("M Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
+	soundTitle = Label(screen, (65, 110, 235, 20), "settings", (colLightGray, colDarkGray), ["Music Volume", colLightGray, 16, "center-center"], [False, False, False])
+	musicUp = HoldButton(screen, (300, 110, 20, 20), ("settings", "musicUp"), (colLightGray, colLightGray), ("M Up.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
+	musicSlider = Slider(screen, (65, 110, 235, 20), ("settings", "music"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 50), drawData=[False])
+	musicDown = HoldButton(screen, (45, 110, 20, 20), ("settings", "musicDown"), (colLightGray, colLightGray), ("M Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
 	
-	soundTitle = Label(screen, (345, 120, 235, 20), "settings", (colLightGray, colDarkGray), ["SFX Volume", colLightGray, 16, "center-center"], [False, False, False])
-	SFXup = HoldButton(screen, (580, 120, 20, 20), ("settings", "SFXup"), (colLightGray, colLightGray), ("SFX Up.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
-	SFXSlider = Slider(screen, (345, 120, 235, 20), ("settings", "SFX"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
-	SFXDown = HoldButton(screen, (325, 120, 20, 20), ("settings", "SFXDown"), (colLightGray, colLightGray), ("SFX Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
+	soundTitle = Label(screen, (345, 110, 235, 20), "settings", (colLightGray, colDarkGray), ["SFX Volume", colLightGray, 16, "center-center"], [False, False, False])
+	SFXup = HoldButton(screen, (580, 110, 20, 20), ("settings", "SFXup"), (colLightGray, colLightGray), ("SFX Up.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
+	SFXSlider = Slider(screen, (345, 110, 235, 20), ("settings", "SFX"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 50), drawData=[False])
+	SFXDown = HoldButton(screen, (325, 110, 20, 20), ("settings", "SFXDown"), (colLightGray, colLightGray), ("SFX Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
 	
-	soundTitle = Label(screen, (65, 180, 515, 20), "settings", (colLightGray, colDarkGray), ["Master Volume", colLightGray, 16, "center-center"], [False, False, False])
-	masterUp = HoldButton(screen, (580, 180, 20, 20), ("settings", "masterUp"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
-	masterSlider = Slider(screen, (65, 180, 515, 20), ("settings", "master"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 100), drawData=[False])
-	masterDown = HoldButton(screen, (45, 180, 20, 20), ("settings", "masterDown"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
+	soundTitle = Label(screen, (65, 140, 515, 20), "settings", (colLightGray, colDarkGray), ["Master Volume", colLightGray, 16, "center-center"], [False, False, False])
+	masterUp = HoldButton(screen, (580, 140, 20, 20), ("settings", "masterUp"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Up.png", tempButtonPath + "Up.png"])
+	masterSlider = Slider(screen, (65, 140, 515, 20), ("settings", "master"), (colLightGray, colWhite, colLightGray), (" ||| ", colDarkGray, True), (0, 50), drawData=[False])
+	masterDown = HoldButton(screen, (45, 140, 20, 20), ("settings", "masterDown"), (colLightGray, colLightGray), ("Master Down.", colDarkGray), imageData=[buttonPath + "Down.png", tempButtonPath + "Down.png"])
 	
 	musicSlider.value = round(musicVolume * 100)
 	musicSlider.ChangeRect()
@@ -1048,7 +1112,6 @@ def SettingsMenu():
 	masterSlider.ChangeRect()
 
 	back = HoldButton(screen, (230, 270, 200, 50), ("settings", "back"), (colLightGray, colLightGray), ("Back.", colDarkGray), imageData=[buttonPath + "Back.png", tempButtonPath + "Back.png"])
-	# add resolution buttons
 
 
 def StartMenu():
@@ -1085,10 +1148,10 @@ def ChangeVolume(soundtype, direction, value=0.1):
 	global musicVolume, sfxVolume, masterVolume, musicSlider, SFXSlider, masterSlider
 	if soundtype == "music":
 		if direction == "up":
-			if musicVolume + value <= 1.0:
+			if musicVolume + value <= 0.5:
 				musicVolume += value
 			else:
-				musicVolume = 1.0
+				musicVolume = 0.5
 			musicSlider.value = round(musicVolume * 100)
 			musicSlider.ChangeRect()
 
@@ -1102,32 +1165,43 @@ def ChangeVolume(soundtype, direction, value=0.1):
 
 	if soundtype == "SFX":
 		if direction == "up":
-			if sfxVolume + value <= 1.0:
+			if sfxVolume + value <= 0.5:
 				sfxVolume += value
+			else:
+				sfxVolume = 0.5
+
 			SFXSlider.value = round(sfxVolume * 100)
 			SFXSlider.ChangeRect()	
 
 		if direction == "down":
 			if sfxVolume - value >= 0.0:
 				sfxVolume -= value
+			else:
+				sfxVolume = 0.0
 			SFXSlider.value = round(sfxVolume * 100)
 			SFXSlider.ChangeRect()
 
 	if soundtype == "master":
 		if direction == "up":
-			if masterVolume + value <= 1.0:
+			if masterVolume + value <= 0.5:
 				masterVolume += value
+			else:
+				masterVolume = 0.5
 			masterSlider.value = round(masterVolume * 100)
 			masterSlider.ChangeRect()
 
 		if direction == "down":
 			if masterVolume - value >= 0.0:
 				masterVolume -= value
+			else:
+				masterVolume = 0.0
 			masterSlider.value = round(masterVolume * 100)
 			masterSlider.ChangeRect()
 
-	if backgroundMusic != None:
-		backgroundMusic.set_volume(musicVolume * masterVolume)
+	try:
+		backgroundMusic.set_volume(musicVolume + masterVolume)
+	except:
+		pass
 
 
 def NewSave():
@@ -1221,7 +1295,7 @@ def CreateEnemies():
 			while pg.Rect((x * SF, y * SF, enemyData["drawData"]["width"] * SF, enemyData["drawData"]["height"] * SF)).colliderect(enemy.rect):
 				x = random.randint(enemyData["drawData"]["width"] * 2, (WIDTH // SF) - enemyData["drawData"]["width"] * 4)
 				y = random.randint(-20, 100)
-		enemy = Enemy(screen, (x, y, enemyData["drawData"]["width"], enemyData["drawData"]["height"]), colRed)
+		enemy = Enemy(screen, (x, y, enemyData["drawData"]["width"], enemyData["drawData"]["height"]), colRed, imageData=[gamePath + "Enemy.png", tempGamePath + "Enemy.png"])
 
 
 def CheckForSaveGame():
